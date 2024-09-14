@@ -1,7 +1,7 @@
 // import {v2} from "cloudinary"
-import fs from "fs"
-import { v2 as cloudinary } from 'cloudinary';
 
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs"
 
 //chai aur backend
 cloudinary.config({ 
@@ -9,22 +9,23 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY, 
     api_secret:process.env.CLOUDINARY_API_SECRET  // Click 'View API Keys' above to copy your API secret
 });
-const uploadOnCloudnary=async(localfilepath)=>{
+const uploadOnCloudinary=async(localfilePath)=>{
     try{
-        if(!localfilepath) return null
-        const response=await cloudinary.uploader.upload(localfilepath,{
+        if(!localfilePath) return null
+        const response=await cloudinary.uploader.upload(localfilePath,{
             resource_type:"auto"
         })
         console.log("File Uploaded Successfully!!",response.url);
+        fs.unlinkSync(localfilePath)
         return response
     }catch{
-        fs.unlinkSync(localfilepath)
+        fs.unlinkSync(localfilePath)
         return null;
     }
 }
 
 
-export{uploadOnCloudnary}
+export{uploadOnCloudinary}
 
 
 
