@@ -22,21 +22,22 @@ const registerUser=asyncHandler(async(req,res)=>{
     //     message:"ok"
     // })
 
-    const{fullName,email,username,password}=req.body
-    console.log("email:",email)
+    const{fullName,email,username,password}=req.body//taking them from the html body Using form(data)
+    // console.log("email:",email)
     
     
     if(
         [fullName,email,username,password].some((field)=>//some is used for returning boolean value either yes or no
             field?.trim() === ""//trim used to trim out the white spaces
         )
-    ){
+    ){   
         throw new ApiError(404,"All fields are mandatory")
     }
    
 
     const existedUser= await User.findOne({//checks whether the user is present or not in the database
-        $or:[{username},{email}]
+        //not returns false it returns null
+        $or:[{username},{email}]//if email or username exists it returns the values 
     })
     
     if(existedUser){
@@ -45,12 +46,14 @@ const registerUser=asyncHandler(async(req,res)=>{
    
 
     
-    const avatarlocalPath=req.files?.avatar[0]?.path
+    const avatarlocalPath=req.files?.avatar[0]?.path//avatar is an array so it returns the first value
     //const coverImageLocalPath = req.files?.coverImage[0]?.path;
     console.log(avatarlocalPath)
 
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+
+
         coverImageLocalPath = req.files.coverImage[0].path
     }
     console.log(coverImageLocalPath)
@@ -79,7 +82,7 @@ const registerUser=asyncHandler(async(req,res)=>{
 
 
     const createdUser=await User.findById(user._id).select(
-        "-password -refreshToken"
+        "-password -refreshToken"//deselects th password and the refresh token
     )
     if(!createdUser){
         throw new ApiError(500,"Some thing went wrong while regestering!!")
@@ -93,8 +96,8 @@ const registerUser=asyncHandler(async(req,res)=>{
 const generateAccessAndRefreshTokens=async(userId)=>{
     try {
         const user=await User.findById(userId)
-        const accessToken=user.generateAccessToken()
-        const refreshToken=user.generateRefreshToken()
+        const accessToken=user.generateAccessToken()//generates an access token from the reference of user.model
+        const refreshToken=user.generateRefreshToken()//generates an refresh token from the reference of user.model
         user.refreshToken=refreshToken
         await user.save({ validateBeforeSave:false })
 
