@@ -115,9 +115,16 @@ const loginUser=asyncHandler(async(req,res)=>{
     //check for the password
     //access and refresh token generated
     //send cookie
-    const {username,email,password}=req.body
+    console.log("hhi")
 
-    if(!username||!email){
+    const {username,email,password}=req.body
+    console.log("hello")
+
+    // if(!username||!email){
+    //     throw new ApiError(404,"username or email required")
+    // }
+    console.log(username,email)
+    if(!username&&!email){
         throw new ApiError(404,"username or email required")
     }
 
@@ -129,11 +136,11 @@ const loginUser=asyncHandler(async(req,res)=>{
     if(!user){
         throw new ApiError(404,"User doesn't exist")
     }
-    
+    console.log(user)
 
     //password check
     const isPasswordValid=await user.isPasswordCorrect(password)
-
+    console.log(isPasswordValid)
     if(!isPasswordValid){
         throw new ApiError(401,"Password is invalid")
     }
@@ -186,5 +193,22 @@ const logoutUser=asyncHandler(async(req,res)=>{
     .clearCookie("accessToken",options)
     .clearCookie("refreshToken",options)
     .json(new ApiResponse(200,{},"User logged Out"))
+})
+
+const refreshToken=asyncHandler(async(req,res)=>{
+    const incomingRefreshToken=req.cookies.refreshToken||req.body.refreshToken;
+    if(incomingRefreshToken){
+        throw new ApiError(401,"Unauthorized Access")
+    }
+
+    const decodedToken=jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET
+    )
+    const user=await User.findById(decodedToken?._id)
+
+    if(!user){
+        console.log(401,"Invalid Refresh Token")
+    }
 })
 export {registerUser,loginUser,logoutUser}
