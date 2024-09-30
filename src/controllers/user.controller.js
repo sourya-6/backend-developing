@@ -194,15 +194,16 @@ const logoutUser=asyncHandler(async(req,res)=>{
     .clearCookie("refreshToken",options)
     .json(new ApiResponse(200,{},"User logged Out"))
 })
-
+//access token is a short lived one which have like a span in hours or a day accessed by user when user logged in using password not stored in database (contains all the information)
+//refresh token is a long termed token which has a long life span like months used to refresh the access token just id is stored in database(contains only the id )
 const refreshToken=asyncHandler(async(req,res)=>{
-    const incomingRefreshToken=req.cookies.refreshToken||req.body.refreshToken;
-    if(incomingRefreshToken){
+    const incomingRefreshToken=req.cookies.refreshToken||req.body.refreshToken;//taking refresh token either from body or cookies
+    if(!incomingRefreshToken){
         throw new ApiError(401,"Unauthorized Access")
     }
 
     try {
-        const decodedToken=jwt.verify(
+        const decodedToken=jwt.verify(//verifying with incoming and the environments REFRESH_TOKEN_SECRET
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
         )
