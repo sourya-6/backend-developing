@@ -115,10 +115,10 @@ const loginUser=asyncHandler(async(req,res)=>{
     //check for the password
     //access and refresh token generated
     //send cookie
-    console.log("hhi")
+    
 
     const {username,email,password}=req.body
-    console.log("hello")
+    
 
     // if(!username||!email){
     //     throw new ApiError(404,"username or email required")
@@ -155,9 +155,9 @@ const loginUser=asyncHandler(async(req,res)=>{
     }
 
     return res
-    .status(200).
-    cookie("accessToken",accessToken)
-    .cookie("refreshToken",refreshToken)
+    .status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
     .json(
         new ApiResponse(
             200,
@@ -242,10 +242,14 @@ const refreshToken=asyncHandler(async(req,res)=>{
 })
 
 const ChangeCurrentPassword=asyncHandler(async(req,res)=>{
-
-    const {oldPassword,newPassword,currentPassword}=req.body;//taking the data from the body
+  
+    
+    const {oldPassword,newPassword}=req.body;//taking the data from the body
+    console.log(oldPassword,newPassword)
+    console.log(req.user)
+    // console.log(user._id)
     const user=await User.findById(req.user?._id)//
-
+    console.log(user)
     const isPasswordCorrect=await user.isPasswordCorrect(oldPassword)
 
     if(!isPasswordCorrect){
@@ -330,11 +334,141 @@ const updatecoverImage=asyncHandler(async(req,res)=>{
             }
         },
         {new:true}
-    ).select("-password")
+    ).select("-password")//- used to not to select that field
 
     return res
     .status(200)
     .json(200,user,"coverImage Updated Successfully")
+})
+
+const getUserChannelProfile=asyncHandler(async(req,res)=>{
+    const {username}=req.params;
+    if(!username?.trim()){
+        throw new ApiError(400,"User is missing")
+    }
+    const channel=await User.aggregate([
+        {
+            $match:{//used to check whether the value is True or False
+                username:username?.toLowerCase()
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"channel",
+                as:"subscribers"
+            }
+            
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscribedTo"
+            }
+        },
+        {
+            $addFields:{
+                SubscriberCount:{
+                    $size:"$subscribers"
+                },
+                ToSubscribedCount:{
+                    $size:"$subscribedTo"
+                },
+                isSubscribed:{
+                    $cond:{
+                        if:{$in:[req.user?._id,"subscribers.subscriber"]},
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },{
+            $project:{
+                fullName:1,
+                email:1,
+                username:1,
+                SubscriberCount:1,
+                ToSubscribedCount,
+                isSubscribed:1,
+                avatar:1,
+                coverImage:1
+            }
+        }
+    ])
+
+    if(!channel?.length()){
+        new ApiError(404,"Channel doesn't exist")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,channel[0],"User fetched successfully")
+    )
+})
+//here we are getting watch history which is a field inside the users .
+const getWatchHistory=asyncHandler(async(req,res)=>{
+    const user=await User.aggregate([
+        {
+            $match:{
+                _id:new mongoose.Types.ObjectId.isValid(req.user._id),//req.user._id is already a object id so wrapping it may cause error
+            },
+            //we are fetching the watch history from the videos model where we used lookup
+            //lookup performs a left join operation which uses four field
+            //from:the foreign model
+            //localfield:for which we are going to fetch
+            //foreign Field:based on what criteria we are fetching
+            //as:name its our wish
+            $lookup:{
+                from:"videos",
+                localField:"watchHistory",
+                foreignField:"_id",
+                as:"watchHistory",
+                pipeline:[//we need the owner details which was also an user so we are using a subpipeline to fetch it
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{//project used to fetch only required fiels from all existing fields
+                                        fullName:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+
+                    },
+                    {
+                        $addFields:{//can add or modify fields
+                            owner:{//we are overwritting the owner field
+                                $first:"$owner"//need to extract from field so we using '$'
+                                //if there are multiple values we are fetching the first one
+                                //here we using first for we are getting multiple arrays while using lookup so we using the first
+                            }
+                        }
+                    }
+                ]
+            },
+            
+        },
+    ])
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,user[0].watchHistory,
+            "Watch History fetched successfully"
+        )
+    )
 })
 
 
@@ -346,6 +480,8 @@ export {registerUser,
     getCurrentUser,
     updateAccountDetails,
     updateAvatar,
-    updatecoverImage
+    updatecoverImage,
+    getUserChannelProfile,
+    getWatchHistory
     
 }

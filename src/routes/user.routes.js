@@ -1,5 +1,17 @@
 import {Router} from "express"
-import {loginUser, registerUser,logoutUser,refreshToken} from "../controllers/user.controller.js"
+import {
+    loginUser,
+     registerUser,
+     logoutUser,
+     refreshToken,
+     ChangeCurrentPassword, 
+     getCurrentUser, 
+     updateAccountDetails,
+     updateAvatar, 
+     updatecoverImage, 
+     getUserChannelProfile,
+      getWatchHistory
+    } from "../controllers/user.controller.js"
 import {upload} from "../middlewares/multer.middleware.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 
@@ -20,8 +32,18 @@ router.route("/register").post(
     registerUser)
 
 router.route("/login").post(loginUser)
-
+router.route("/changepassword").post(ChangeCurrentPassword)
 //secured
 router.route("/logout").post(verifyJWT, logoutUser)
 router.route("/refresh-token").post(refreshToken)
+router.route("/change-password").post(verifyJWT,ChangeCurrentPassword)
+router.route("/current-user").get(verifyJWT,getCurrentUser)
+router.route("/update-account").patch(verifyJWT,updateAccountDetails)
+//patch used to partially update any resource
+router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateAvatar)
+router.route("/coverImage").patch(verifyJWT,upload.single("coverImage"),updatecoverImage)
+router.route("/c/:username").get(verifyJWT,getUserChannelProfile)
+router.route("/history").get(verifyJWT,getWatchHistory)
+
+
 export default router
