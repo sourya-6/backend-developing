@@ -174,8 +174,11 @@ const logoutUser=asyncHandler(async(req,res)=>{
     User.findByIdAndUpdate(
         req.user._id,
         {
-            $set:{
-                refreshToken:undefined
+            // $set:{ //some places these method was used
+            //     refreshToken:undefined
+            // }
+            $unset:{ //here we use these to remove the refreshToken by changing it flag to 1
+                refreshToken:1,
             }
             
         },
@@ -219,8 +222,8 @@ const refreshToken=asyncHandler(async(req,res)=>{
             httpOnly:true,
             secure:true
         }
-        const {accessToken,newRefreshToken}=await generateAccessAndRefreshTokens(user._id)
-    
+        const {accessToken,refreshToken:newRefreshToken}=await generateAccessAndRefreshTokens(user._id)
+        //here refreshToken is stored in newrefreshtoken
         return res
         .status(200)
         .cookie("accessToken",accessToken,options)
@@ -243,7 +246,7 @@ const refreshToken=asyncHandler(async(req,res)=>{
 
 const ChangeCurrentPassword=asyncHandler(async(req,res)=>{
   
-    
+    console.log(req.body)
     const {oldPassword,newPassword}=req.body;//taking the data from the body
     console.log(oldPassword,newPassword)
     console.log(req.user)
@@ -273,9 +276,13 @@ const getCurrentUser=asyncHandler(async(req,res)=>{
 
 const updateAccountDetails=asyncHandler(async(req,res)=>{
     const {newfullName,newemail}=req.body;
-    if(!fullName||!email){
+    console.log(newfullName,newemail)
+    
+    if(!newfullName||!newemail){
         throw new ApiError(401,"All Fields are mandatory")
     }
+    console.log("hello")
+    console.log(req.user._id)
     const user=User.findByIdAndUpdate(
         req.user._id,
         {
@@ -286,6 +293,11 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
         },
         {new:true}
     ).select("-password")
+    console.log("good")
+    
+    if(!user){
+        throw new ApiError(400,"Updating the user failed")
+    }
 
     return res
     .status(200)
@@ -294,14 +306,23 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
 
 const updateAvatar=asyncHandler(async(req,res)=>{
     const avatarlocalPath=req.file?.path
+    console.log("avatarlocalPath")
 
     if(!avatarlocalPath){
         throw new ApiError(400,"Avatar file is missing")
     }
     const avatar=await uploadOnCloudinary(avatarlocalPath)
+    console.log("avatar")
+    if (!avatar.url) {
+        throw new ApiError(400, "Error while uploading on avatar")
+        
+    }
+    else{
+        console.log("ok")
+    }
 
-
-    const user=await findByIdAndUpdate(
+    const user=await User.findByIdAndUpdate(
+        
         req.user?._id,
         {
             $set:{
@@ -310,10 +331,10 @@ const updateAvatar=asyncHandler(async(req,res)=>{
         },
         {new:true}
     ).select("-password")
-
+    console.log('hey')
     return res
     .status(200)
-    .json(200,user,"Avatar Updated Successfully")
+    .json(new ApiResponse(200,user,"Avatar Updated Successfully"))
 })
 
 
@@ -326,7 +347,7 @@ const updatecoverImage=asyncHandler(async(req,res)=>{
     const coverImage=await uploadOnCloudinary(coverImageLocalPath)
 
 
-    const user=await findByIdAndUpdate(
+    const user=await User.findByIdAndUpdate(//fetching the User and updating from it
         req.user?._id,
         {
             $set:{
@@ -338,14 +359,17 @@ const updatecoverImage=asyncHandler(async(req,res)=>{
 
     return res
     .status(200)
-    .json(200,user,"coverImage Updated Successfully")
+    .json(new ApiResponse(200,user,"coverImage Updated Successfully"))
 })
 
 const getUserChannelProfile=asyncHandler(async(req,res)=>{
+    console.log(req.params)
     const {username}=req.params;
+    console.log(username)
     if(!username?.trim()){
         throw new ApiError(400,"User is missing")
     }
+    console.log('hi')
     const channel=await User.aggregate([
         {
             $match:{//used to check whether the value is True or False

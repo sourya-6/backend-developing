@@ -13,10 +13,10 @@ const uploadOnCloudinary=async(localFilePath)=>{
     try{
         if(!localFilePath) return null
         const response=await cloudinary.uploader.upload(localFilePath,{
-            resource_type:"auto"
+            resource_type:"auto"//which automatically detects the given file is an image,video etc..
         })
         console.log("File Uploaded Successfully!!",response.url);
-        fs.unlinkSync(localFilePath)
+        fs.unlinkSync(localFilePath)//removes the file from local path
         return response
     }catch{
         fs.unlinkSync(localFilePath)
@@ -24,8 +24,21 @@ const uploadOnCloudinary=async(localFilePath)=>{
     }
 }
 
+const deletefromcloudinary=async(cloudinaryFilePath)=>{
+    try{
+        if(!cloudinaryFilePath) return null;
+        const filename=cloudinaryFilePath.split("/").pop().split(".")[0];
+        const response=await  cloudinary.uploader.destroy(filename);
+        return response;
+    }
+    catch(error){
+        console.log("Error While deleting the file",error);
+        return null
+    }
+}
 
-export{uploadOnCloudinary}
+
+export{uploadOnCloudinary,deletefromcloudinary}
 
 
 
