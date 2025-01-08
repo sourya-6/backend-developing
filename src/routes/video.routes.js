@@ -2,11 +2,12 @@ import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import multer from "multer";
-import { publishAVideo } from "../controllers/video.controller.js";
+import { getAllVideos, publishAVideo } from "../controllers/video.controller.js";
 
 const router=Router()
-router.route(verifyJWT)
-router.route("/Publish-Video").post(
+
+router.use(verifyJWT)
+router.route("/").get(getAllVideos).post(
     upload.fields([
         {
             name:"thumbnail",
@@ -19,6 +20,6 @@ router.route("/Publish-Video").post(
     ]),
     publishAVideo 
     )
-router.use(verifyJWT)
+
 
 export default router;

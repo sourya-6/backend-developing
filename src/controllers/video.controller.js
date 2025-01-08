@@ -17,6 +17,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     //sortType:asc or desc
     
     //TODO: get all videos based on query, sort, pagination
+    console.log(req.query)
     if(!query||!query.trim()==""){
         throw new ApiError(400,"Query is required")
     }
@@ -89,33 +90,42 @@ const publishAVideo = asyncHandler(async (req, res) => {
     if(!title.trim()||!description.trim()){
         throw new ApiError(400,"Title and description is needed")
     }
-
-    const videoFileLocalPath=req.file?.videoFile[0]?.path
-    if(!videoFileLocalPath){
-        throw new ApiError(401,"No Video File Found")
-    }
-    const videoFile=await uploadOnCloudinary(videoFileLocalPath)
-    if(!videoFile.url){
-        throw new ApiError(500,"Error while publishing video ")
-    }
-
-    const videoDuration=videoFile.duration()
-    if(!videoDuration){
-        throw new ApiError(400,"Video Duration not fetched")
-    }
-    const thumbnailLocalPath=req.file?.thumbnail[0]?.path
+    console.log( title, description)
+    console.log()
+    const thumbnailLocalPath=req.files?.thumbnail[0]?.path
     if(!thumbnailLocalPath){
         throw new ApiError(400,"No thumbnail Found")
     }
+    console.log(thumbnailLocalPath)
     const thumbnail=await uploadOnCloudinary(thumbnailLocalPath)
     if(!thumbnail.url){
         console.log(500,"Error while uploading thumbnail")
     }
 
+    const videoFileLocalPath=req.files?.videoFile[0]?.path
+    if(!videoFileLocalPath){
+        throw new ApiError(401,"No Video File Found")
+    }
+    
+    const videoFile=await uploadOnCloudinary(videoFileLocalPath)
+    if(!videoFile.url){
+        throw new ApiError(500,"Error while publishing video ")
+    }
+
+    const videoDuration=videoFile.duration
+    console.log(videoDuration)
+    if(!videoDuration){
+        throw new ApiError(400,"Video Duration not fetched")
+    }
+    
+    
+  
+    
+
     const video=await Video.create({
         videoFile:videoFile.url,
-        title,
-        description,
+        title:title,
+        description:description,
         thumbnail:thumbnail.url,
         duration:videoDuration,
         owner:req.user._id
