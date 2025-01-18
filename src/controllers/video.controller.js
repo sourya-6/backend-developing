@@ -9,7 +9,10 @@ import { title } from "process"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
+    console.log(req.query)
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+    console.log(query, sortBy, sortType, userId)
+    
     //page:default is 1
     //limit: max upto 10 videos(default)
     //query:  search string for title or descn
@@ -17,11 +20,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
     //sortType:asc or desc
     
     //TODO: get all videos based on query, sort, pagination
-    console.log(req.query)
+    console.log(req.Video)
     if(!query||!query.trim()==""){
         throw new ApiError(400,"Query is required")
     }
-
+    
     //steps:-
     //we used a match to find like "mogodb"
     //or is used here whether the given mogodb may be in title or descrn of video
@@ -90,28 +93,28 @@ const publishAVideo = asyncHandler(async (req, res) => {
     if(!title.trim()||!description.trim()){
         throw new ApiError(400,"Title and description is needed")
     }
-    console.log( title, description)
-    console.log()
+    
     const thumbnailLocalPath=req.files?.thumbnail[0]?.path
     if(!thumbnailLocalPath){
         throw new ApiError(400,"No thumbnail Found")
     }
-    console.log(thumbnailLocalPath)
+
     const thumbnail=await uploadOnCloudinary(thumbnailLocalPath)
     if(!thumbnail.url){
         console.log(500,"Error while uploading thumbnail")
     }
-
+    
     const videoFileLocalPath=req.files?.videoFile[0]?.path
     if(!videoFileLocalPath){
         throw new ApiError(401,"No Video File Found")
     }
     
     const videoFile=await uploadOnCloudinary(videoFileLocalPath)
+    console.log(videoFile)
     if(!videoFile.url){
         throw new ApiError(500,"Error while publishing video ")
     }
-
+    console.log("duration?")
     const videoDuration=videoFile.duration
     console.log(videoDuration)
     if(!videoDuration){
