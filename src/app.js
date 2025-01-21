@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import errorHandler from "./utils/global.js"
 const app=express()
 //initializing cors
 app.use(cors({
@@ -21,5 +22,6 @@ app.use("/api/v1/user",userRouter)
 app.use("/api/v1/tweet",tweetRouter)
 app.use("/api/v1/video",videoRouter)
 
+app.use(errorHandler);
 
 export{ app }

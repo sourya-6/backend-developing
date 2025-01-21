@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/apiResponse.js"
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken"
 import { ReturnDocument } from "mongodb"
+import {sendWelcomeEmail} from "../utils/sendEmail.js"
 const registerUser=asyncHandler(async(req,res)=>{
     // get user details from frontend
     // validation - not empty
@@ -16,12 +17,14 @@ const registerUser=asyncHandler(async(req,res)=>{
     // remove password and refresh token field from response
     // check for user creation
     // return res
+   
 
 
     // res.status(200).json({
     //     message:"ok"
     // })
-
+    console.log('hello')
+    console.log(req.body)
     const{fullName,email,username,password}=req.body//taking them from the html body Using form(data)
     // console.log("email:",email)
     
@@ -33,15 +36,20 @@ const registerUser=asyncHandler(async(req,res)=>{
     ){   
         throw new ApiError(404,"All fields are mandatory")
     }
-   
+   console.log('hey')
 
     const existedUser= await User.findOne({//checks whether the user is present or not in the database
         //not returns false it returns null
-        $or:[{username},{email}]//if email or username exists it returns the values 
+        $or:[{username:req.body.username},{email:req.body.email}]//if email or username exists it returns the values 
     })
-    
-    if(existedUser){
-        throw new ApiError(409,"user name already existed try with other one")
+    console.log("existedUser",existedUser)
+    try{
+        if(existedUser){
+            throw new ApiError(400,"User already exists").send(res)
+        }
+    }
+    catch(err){
+        next(err)
     }
    
 
@@ -79,11 +87,17 @@ const registerUser=asyncHandler(async(req,res)=>{
         username:username.toLowerCase()
     })
     console.log(user)
-
+    console.log("check")
+    console.log(email,fullName)
+    sendWelcomeEmail(email,fullName);
 
     const createdUser=await User.findById(user._id).select(
         "-password -refreshToken"//deselects th password and the refresh token
     )
+    console.log("check")
+    console.log(email,fullName)
+    sendWelcomeEmail(email,fullName);
+
     if(!createdUser){
         throw new ApiError(500,"Some thing went wrong while regestering!!")
     }
