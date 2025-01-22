@@ -297,25 +297,29 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
     }
     console.log("hello")
     console.log(req.user._id)
-    const user=User.findByIdAndUpdate(
-        req.user._id,
+    console.log(req.user.fullName)
+    const user=await User.findByIdAndUpdate(
+        
+        req.user?._id,
         {
             $set:{
                 fullName:newfullName,
-                email:newemail,
+                email:newemail
             }
         },
         {new:true}
     ).select("-password")
     console.log("good")
+    console.log(user.fullName)
+    console.log(user.email)
     
     if(!user){
         throw new ApiError(400,"Updating the user failed")
     }
-
+    console.log(100)
     return res
     .status(200)
-    .json(new ApiResponse(200,user,"Account details Updated Successfully"))
+    .json(new ApiResponse(200,User,"Account details Updated Successfully"))
 })
 
 const updateAvatar=asyncHandler(async(req,res)=>{
@@ -346,6 +350,7 @@ const updateAvatar=asyncHandler(async(req,res)=>{
         {new:true}
     ).select("-password")
     console.log('hey')
+    console.log(user.avatar)
     return res
     .status(200)
     .json(new ApiResponse(200,user,"Avatar Updated Successfully"))
