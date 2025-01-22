@@ -319,7 +319,7 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
     console.log(100)
     return res
     .status(200)
-    .json(new ApiResponse(200,User,"Account details Updated Successfully"))
+    .json(new ApiResponse(200,user,"Account details Updated Successfully"))
 })
 
 const updateAvatar=asyncHandler(async(req,res)=>{
