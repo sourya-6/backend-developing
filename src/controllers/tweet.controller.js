@@ -27,7 +27,6 @@ const createTweet = asyncHandler(async (req, res) => {
 
 const getUserTweets = asyncHandler(async (req, res) => {
     // TODO: get user tweets
-    console.log(req.user?._id)
     const {userId}=req.params
     console.log(userId)
     if(!userId ||!isValidObjectId(userId)){
@@ -35,7 +34,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
     }
 
     const userTweet=await Tweet.findById(userId)
-
+    console.log(userTweet)
     if(!userTweet){
         throw new ApiError(400,"Users have no tweets")
     }
