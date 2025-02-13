@@ -44,8 +44,13 @@ const userSchema = new Schema(
         },
         refreshToken: {
             type: String
-        }
-
+        },
+        tweets:[
+            {
+                type:Schema.Types.ObjectId,
+                ref:"Tweet"
+            }
+        ]
     },
     {
         timestamps: true

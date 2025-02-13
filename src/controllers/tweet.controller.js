@@ -16,11 +16,17 @@ const createTweet = asyncHandler(async (req, res) => {
         content,
         owner:req.user._id
     });
+    await User.findByIdAndUpdate(req.user._id,
+        {
+            $push:{tweets:tweet._id}
+        }
+    )
     if(!tweet){
         throw new ApiError(500,"Something Went wrong")//internal server error
     }
     return res
     .status(200)
+
     .json(new ApiResponse(201,tweet,"Tweeted Successfully"))
     
 })
@@ -28,21 +34,21 @@ const createTweet = asyncHandler(async (req, res) => {
 const getUserTweets = asyncHandler(async (req, res) => {
     // TODO: get user tweets
     const {userId}=req.params
-    console.log(userId)
     if(!userId ||!isValidObjectId(userId)){
         throw new ApiError(400,"Tweet Id not found")
     }
 
-    const userTweet=await Tweet.findById(userId)
-    console.log(userTweet)
-    if(!userTweet){
+    const tweetsId=await User.findById(userId).select("tweets")
+    console.log(tweetsId)
+    if(!tweetsId){
         throw new ApiError(400,"Users have no tweets")
     }
+    const userTweets=await Tweet.find({ _id: { $in: tweetsId.tweets } })
 
     return res.
     status(200).
     json(
-        new ApiResponse(200,userTweet,"User Tweets fetched successfully")
+        new ApiResponse(200,userTweets,"User Tweets fetched successfully")
     )
     
 
